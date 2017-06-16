@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+        
+<link rel="stylesheet" href="css/topcoat-desktop-dark.min.css"/>
+<link  id="hostStyle" rel="stylesheet" href="css/styles.css"/>
+
+<title></title>
+</head>
+
+<body class="hostElt">
+
+    <div id="content">        
+        
+        <div>                
+            <button id="btn_export" class="topcoat-button--large hostFontSize full">Export CSV</button> 
+            <button id="btn_import" class="topcoat-button--large hostFontSize full">Import CSV</button>
+        </div>
+                <div>
+            <button id="btn_loka" class="topcoat-button--large hostFontSize half1">Export Loka</button>
+            <button id="btn_info" class="topcoat-button--large hostFontSize half1">Info</button>            
+        </div> 
+        <div id="info">
+             <span class="topcoat-notification givespace">Export: </span><br>
+                Exports all visible Textlayers to a CSV and traits them as they are german.
+            <br>
+            <span class="topcoat-notification givespace">Import:</span><br>
+             Delete all commas from localized cells and export xmlx as .csv(comma seperated values).
+        </div>
+       
+        
+    </div>
+    
+    
+    <script src="js/libs/CSInterface.js"></script>
+    <script src="js/libs/jquery-2.0.2.min.js"></script>
+
+    <script src="js/themeManager.js"></script>
+    <script src="js/main.js"></script>
+
+        
+</body>
+</html>
