@@ -317,9 +317,11 @@ function createCSV(){
 					// Only read VISIBLE and TEXT layers
 					if ( (currentLayer.visible) && (currentLayer.kind == LayerKind.TEXT) )
 					{
-                           killBreaks = ","+","+","+currentLayer.textItem.contents.length+","+currentLayer.textItem.contents+","+","+","+","+","+","+","+","
-                           neededOutput = killBreaks.replace(/(\r\n|\n|\r)/gm," ");
-						fileOut.writeln(neededOutput);						
+                        var length50 =(currentLayer.textItem.contents.length+currentLayer.textItem.contents.length/100*50).toFixed();
+
+                        killBreaks = ","+","+","+length50+","+currentLayer.textItem.contents+","+","+","+","+","+","+","+","
+                        neededOutput = killBreaks.replace(/(\r\n|\n|\r)/gm," ");
+				        fileOut.writeln(neededOutput);						
 					}
 
 				}
