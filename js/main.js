@@ -46,7 +46,9 @@
         }
         // Listen for the Flyout menu clicks
 		csInterface.addEventListener("com.adobe.csxs.events.flyoutMenuClicked", flyoutMenuClickedHandler);
-        
+         $("#external").click(function () {
+              window.cep.process.createProcess(processPath, "https://docs.google.com/spreadsheet/ccc?new");
+        });
         
         $("#btn_export").click(function () {
             csInterface.evalScript('createCSV()');
