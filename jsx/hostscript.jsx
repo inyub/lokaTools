@@ -433,6 +433,10 @@ function doSomething(placeHolder, saveName) {
         sliderQ.value = Number(valueQ.text)*2;
     }
     w.add ("panel", [0,25,360,23]);
+    var miscGroup = w.add("group");
+    var checkCrop = miscGroup.add("checkbox", undefined, "Crop Image");
+    checkCrop.value = false;
+    w.add ("panel", [0,25,360,23]);
     var buttonGroup = w.add("group");
     var convert_button = buttonGroup.add("button", undefined, "Export");
     var close_button = buttonGroup.add("button", undefined, "Cancel");
@@ -1303,8 +1307,11 @@ function doSomething(placeHolder, saveName) {
                 desc28.putInteger(idLvls, value.text);
                 executeAction(idPstr, desc28, DialogModes.NO);
             }
-
-            //activeDocument.trim(TrimType.TRANSPARENT,true,true,true,true);  
+            
+            if (checkCrop.value === true) {
+            activeDocument.mergeVisibleLayers();  
+            activeDocument.trim(TrimType.TRANSPARENT,true,true,true,true);  
+            }
             
             if (radioPNG.value === true) {
                 var saveFile = File(oldPath + "/" + newName + postfix + ".png");
