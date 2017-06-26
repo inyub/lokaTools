@@ -6,7 +6,7 @@ var base = 'DE';
 var dplcate = ['EN','ES','FR','IT','NL','PL','RU','TR']
 
 function openFile() {
-var importedCSV =  File.openDialog ("Open CSV", "*.csv, *.txt, *.xls, *.xlsx", false);
+var importedCSV =  File.openDialog ("Open CSV", "*.tsv, *.txt, *.xls, *.xlsx, *.csv", false);
 
 importedCSV.open('r');
 
@@ -27,7 +27,7 @@ while(!importedCSV.eof) {//as long "end of file" is not reached
     str += importedCSV.readln();
     str += "\n";
 }
-var doArr = str.split(',');
+var doArr = str.split('\t');
 
 //0-12 Titel Leiste
 //13-25 Nächste Reihe
@@ -258,7 +258,7 @@ function createCSV(){
 		else 
 		{
 			// Auto set filePath and fileName
-			filePath = Folder.myDocuments + '/' + app.activeDocument.name + '.csv';
+			filePath = Folder.myDocuments + '/' + app.activeDocument.name + '.tsv';
 		}
 		
 		// create outfile
@@ -274,7 +274,7 @@ function createCSV(){
 		fileOut.open("w", "TEXT");
 
 		// Append title of document to file
-		fileOut.writeln("Context, Image directory, EN, Max length, DE, ES, FR, IT, NL, PL, RU, TR, US EN");
+		fileOut.writeln("Context\tImage directory\tEN\tMax length\tDE\tES\tFR\tIT\tNL\tPL\tRU\tTR\tUS EN");
 
 		// call to the core with the current document
 		exportCSV(app.activeDocument);
@@ -319,7 +319,7 @@ function createCSV(){
 					{
                         var length50 =(currentLayer.textItem.contents.length+currentLayer.textItem.contents.length/100*50).toFixed();
 
-                        killBreaks = ","+","+","+length50+","+currentLayer.textItem.contents+","+","+","+","+","+","+","+","
+                        killBreaks = "\t"+"\t"+"\t"+length50+"\t"+currentLayer.textItem.contents+"\t"+"\t"+"\t"+"\t"+"\t"+"\t"+"\t"+"\t"
                         neededOutput = killBreaks.replace(/(\r\n|\n|\r)/gm," ");
 				        fileOut.writeln(neededOutput);						
 					}
