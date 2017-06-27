@@ -441,6 +441,9 @@ function doSomething(placeHolder, saveName) {
     var convert_button = buttonGroup.add("button", undefined, "Export");
     var close_button = buttonGroup.add("button", undefined, "Cancel");
 
+    //var lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"];
+    var lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"];
+    
     convert_button.onClick = function () {
         newName = newName.text;
         // Select Loka Folder
@@ -534,7 +537,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-de";
+            var postfix = lokaEnding[0];
             main(postfix);
         }
         //=======================================================
@@ -647,7 +650,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-en";
+            var postfix = lokaEnding[1];
             main(postfix);
         }
         //=======================================================
@@ -738,7 +741,7 @@ function doSomething(placeHolder, saveName) {
             executeAction(idMk, desc1299, DialogModes.NO);
 
 
-            var postfix = "-es";
+            var postfix = lokaEnding[2];
             main(postfix);
         }
         //=====================================================
@@ -827,7 +830,7 @@ function doSomething(placeHolder, saveName) {
             desc1529.putInteger(idVrsn, 5);
             executeAction(idMk, desc1529, DialogModes.NO);
 
-            var postfix = "-fr";
+            var postfix = lokaEnding[3];
             main(postfix);
 
         }
@@ -920,7 +923,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-it";
+            var postfix = lokaEnding[4];
             main(postfix);
         }
         //=======================================================
@@ -1012,7 +1015,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-nl";
+            var postfix = lokaEnding[5];
             main(postfix);
         }
         //=======================================================
@@ -1104,7 +1107,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-pl";
+            var postfix = lokaEnding[6];
             main(postfix);
         }
         //=======================================================
@@ -1196,7 +1199,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-ru";
+            var postfix = lokaEnding[7];
             main(postfix);
         }
         //=======================================================
@@ -1288,7 +1291,7 @@ function doSomething(placeHolder, saveName) {
 
 
 
-            var postfix = "-tr";
+            var postfix = lokaEnding[8];
             main(postfix);
         }
         //=======================================================
