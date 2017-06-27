@@ -436,15 +436,26 @@ function doSomething(placeHolder, saveName) {
     var miscGroup = w.add("group");
     var checkCrop = miscGroup.add("checkbox", undefined, "Crop Image");
     checkCrop.value = false;
+    var checkMobil = miscGroup.add("checkbox", undefined, "Mobil Postfix (_de)");
+    checkMobil.value = false;
     w.add ("panel", [0,25,360,23]);
     var buttonGroup = w.add("group");
     var convert_button = buttonGroup.add("button", undefined, "Export");
     var close_button = buttonGroup.add("button", undefined, "Cancel");
 
-    //var lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"];
-    var lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"];
-    
+    //var lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"]; //web
+    //var lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"]; //mobil
+    var lokaEnding;
+
     convert_button.onClick = function () {
+        
+        if (checkMobil.value == true) {
+            lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"]; //mobil
+        }
+        else {
+            lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"]; //web
+        }
+        
         newName = newName.text;
         // Select Loka Folder
         // =======================================================
