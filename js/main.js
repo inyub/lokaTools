@@ -57,10 +57,13 @@
             csInterface.evalScript('openFile()');
         });
         $("#btn_loka").click(function () {          
-            csInterface.evalScript('doSomething()');
+            csInterface.evalScript('runScript()');
         });
         $("#btn_info").click(function () {          
             csInterface.evalScript('explain()');
+        });
+        $("#btn_dplcfolder").click(function () {
+            csInterface.evalScript('dplcFolderForLoka()');
         });
     }
         

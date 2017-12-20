@@ -1,5 +1,386 @@
-/*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
+﻿/*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
 /*global $, Folder*/
+
+
+#target Photoshop
+#target estoolkit
+var savePath = activeDocument.path;
+var savePostfix;
+var dynFolderName;
+var giveFileName;
+var doubleSize ="@2x";
+var quadSize = "@4x";
+
+
+
+function runScript(){
+    //alert(savePath);
+    var dialogMain = new Window("dialog", "Loka Exporter");
+        dialogMain.alignChildren = "left";
+        //var titleMain = dialogMain.add('StaticText {text:"Export Settings", characters: 20, justify: "center"}');
+        //titleMain.graphics.font = "dialog: 14";
+
+        // Hier wird der Export Name generiert
+        var exportName = dialogMain.add("group");
+            exportName.add("StaticText", undefined,  "&Enter Name:");
+            var nameDropdown = exportName.add("dropdownlist", undefined, ["background", "teaser-2100x637", "teaser-1400x650", "-", ""]);
+            nameDropdown.selection = 0;
+            giveFileName = exportName.add("edittext", undefined, "", "custom");
+            giveFileName.shortcutKey ="e";
+            giveFileName.characters = 10;
+            var exportPostfixDemo = exportName.add("StaticText", undefined, "-xx.");
+            var radioPNG = exportName.add("radiobutton", undefined, "&PNG");
+            radioPNG.shortcutKey = "p";
+            var radioSuperPNG = exportName.add("radiobutton", undefined, "&PNG-8");
+            //radioJPG.shortcutKey = "s";
+            var radioJPG = exportName.add("radiobutton", undefined, "&JPG");
+            radioJPG.shortcutKey = "j";
+            
+                radioPNG.value = true;
+
+        var exportBackground = dialogMain.add("group");
+        exportBackground.alignChildren = "left";
+        exportBackground.add("StaticText", undefined, "&Background Folder Name");
+        var staticFolderName = exportBackground.add("EditText", undefined, "HG");
+        staticFolderName.shortcutKey ="b";
+    
+        var includeHG = exportBackground.add("checkbox", undefined, "",)
+        includeHG.value = true;
+    
+        var exportFolder = dialogMain.add("group");
+        exportFolder.add("StaticText", undefined, "&Localized Folder Name     ");
+        dynFolderName = exportFolder.add("EditText", undefined, "CS,DE,EN,ES,FR,IT,NL,PL,RU,TR");
+        dynFolderName.shortcutKey = "l"; //wie L
+        var exportPostfix = dialogMain.add("group");
+        exportPostfix.add("StaticText", undefined, "Export Loca Post&fix         ");
+        var dynExportName = exportPostfix.add("EditText", undefined, "-cS,-de,-en,-es,-fr,-it,-nl,-pl,-ru,-tr");
+        dynExportName.shortcutKey = "f"; 
+         var describ = dialogMain.add('StaticText {text:"                                             List Folder Name and Postfix without Comma", characters: 20, justify: "center"}');
+        describ.graphics.font = "dialog: 9";
+    
+        dialogMain.add("panel", [0,25,530,23]);
+    
+        var saveLocationInfo = dialogMain.add("group");
+        
+        var btnSelectFolder = saveLocationInfo.add("button", undefined, "Select");
+        btnSelectFolder.graphics.font = "dialog: 9";
+        btnSelectFolder.onClick = function () {
+            savepath = Folder.selectDialog("Select Folder", undefined, true);
+            alert(savePath);
+        } 
+    
+        var btnFolder = saveLocationInfo.add("button", undefined,"Open");
+        btnFolder.graphics.font = "dialog: 9";
+        btnFolder.onClick = function () {
+            savePath.execute();
+        }
+        var saveLocaText = saveLocationInfo.add("StaticText", undefined, savePath);
+        saveLocaText.graphics.font = "dialog: 9";
+    
+        dialogMain.add("panel", [0,25,530,23]);
+
+        // Hier sind Settings wie Tontrennung und JPG Qualität
+        var settingTontrennung = dialogMain.add("group");
+        var checkTontrennung = settingTontrennung.add("checkbox", undefined, "&Tontrennung");
+        var value = settingTontrennung.add('edittext{text: 50, characters: 3, justify:"center", active: true}');
+        value.shortcutKey = "t";
+        var slider = settingTontrennung.add('slider{minvalue: 0, maxvalue: 255, value: 50}');
+
+        checkTontrennung.value = true;
+        var check = checkTontrennung.value;
+        var setting = value.text;
+        slider.onChanging = function () {
+            value.text = slider.value
+        }
+        value.onChanging = function () {
+            slider.value = Number(value.text)
+        }
+
+        var settingQuality = dialogMain.add('group{orientation:"row", justify:"left"}');
+        settingQuality.add('statictext {text:" JPG Only Quality", characters: 25, justify: "left"}');
+        var valueQ = settingQuality.add('edittext{text: 50, characters: 3, justify:"center", active: true}');
+        var sliderQ = settingQuality.add('slider{minvalue: 0, maxvalue: 200, value: 100}');
+
+         sliderQ.onChanging = function () {
+            valueQ.text = sliderQ.value/2;
+        }
+        valueQ.onChanging = function () {
+            sliderQ.value = Number(valueQ.text)*2;
+        }
+
+        dialogMain.add ("panel", [0,25,530,23]);
+
+        var miscGroup = dialogMain.add("group");
+        var checkCrop = miscGroup.add("checkbox", undefined, "Crop Image");
+        checkCrop.value = false;
+        var checkMobilScale = miscGroup.add("checkbox", undefined, "3 Sizes (@4x, @2x, 'none')");
+        checkMobilScale.value = false;
+
+        dialogMain.add ("panel", [0,25,530,23]);
+
+        var buttonGroup = dialogMain.add("group", undefined, "center");
+        buttonGroup.add("StaticText", undefined, "                                                          ");
+        var convert_button = buttonGroup.add("button", undefined, "Export");
+        var close_button = buttonGroup.add("button", undefined, "Cancel");
+
+        convert_button.onClick = function () {
+            // Speichert die Eingaben für den nächsten Start
+            var desc1 = new ActionDescriptor();  
+            desc1.putString(0, dynFolderName.text);  
+            app.putCustomOptions("9b604d88-b4d6-4f08-8eb9-e3ea0e61e45c", desc1, true);  
+            var desc2 = new ActionDescriptor();  
+            desc2.putString(0, dynExportName.text);  
+            app.putCustomOptions("36132d7e-520e-4bd4-9a43-2bdbfea6ee8e", desc2, true);  
+
+            dynFolderName = dynFolderName.text.split(",");
+            savePostfix = dynExportName.text.split(",");
+            //Hier werden die Funktionen für den Export aufgerufen
+            for (i=0; i<dynFolderName.length; i++) {
+                folderToImg(includeHG);
+                saveImg();
+            }
+             dialogMain.close();
+            };
+
+    try {  
+        var desc1 = app.getCustomOptions("9b604d88-b4d6-4f08-8eb9-e3ea0e61e45c");  
+        dynFolderName.text = desc1.getString(0);  
+    } catch (e1) {  
+        dynFolderName.text = "predefined value";  
+
+    } 
+    try {  
+        var desc2 = app.getCustomOptions("36132d7e-520e-4bd4-9a43-2bdbfea6ee8e");  
+        dynExportName.text = desc2.getString(0);  
+    } catch (e2) {  
+        dynExportName.text = "predefined value";  
+    }   
+
+    dialogMain.show();
+
+
+
+
+
+    // =======================================================
+    // ===============LOOP THRU' DA LAYERS ====================
+    // =======================================================
+
+
+    function folderToImg(includeHG) {
+        // ======================================================= SELECT Background
+        if ( includeHG.value == true ) {
+        var idslct = charIDToTypeID( "slct" );
+            var desc14 = new ActionDescriptor();
+            var idnull = charIDToTypeID( "null" );
+                var ref2 = new ActionReference();
+                var idLyr = charIDToTypeID( "Lyr " );
+                ref2.putName( idLyr, staticFolderName.text ); //  STATIC FOLDERNAME  - Always "HG"
+            desc14.putReference( idnull, ref2 );
+            var idMkVs = charIDToTypeID( "MkVs" );
+            desc14.putBoolean( idMkVs, false );
+            var idLyrI = charIDToTypeID( "LyrI" );
+                var list2 = new ActionList();
+                list2.putInteger( 18433 );
+            desc14.putList( idLyrI, list2 );
+        executeAction( idslct, desc14, DialogModes.NO );
+        }
+        // ======================================================= SELECT LOKA FOLDER
+        var idslct = charIDToTypeID( "slct" );
+            var desc15 = new ActionDescriptor();
+            var idnull = charIDToTypeID( "null" );
+                var ref3 = new ActionReference();
+                var idLyr = charIDToTypeID( "Lyr " );
+                ref3.putName( idLyr, dynFolderName[i] ); // DYNAMIC FOLDERNAME - Loops Thru Array
+            desc15.putReference( idnull, ref3 );
+        if ( includeHG.value == true ) {
+            var idselectionModifier = stringIDToTypeID( "selectionModifier" );
+            var idselectionModifierType = stringIDToTypeID( "selectionModifierType" );
+            var idaddToSelection = stringIDToTypeID( "addToSelection" );
+            desc15.putEnumerated( idselectionModifier, idselectionModifierType, idaddToSelection );
+        }
+            var idMkVs = charIDToTypeID( "MkVs" );
+            desc15.putBoolean( idMkVs, false );
+            var idLyrI = charIDToTypeID( "LyrI" );
+                var list3 = new ActionList();
+                list3.putInteger( 18433 );
+                list3.putInteger( 18829 );
+            desc15.putList( idLyrI, list3 );
+        executeAction( idslct, desc15, DialogModes.NO );
+
+        // ======================================================= NEW DOC
+        var idMk = charIDToTypeID( "Mk  " );
+            var desc19 = new ActionDescriptor();
+            var idnull = charIDToTypeID( "null" );
+                var ref4 = new ActionReference();
+                var idDcmn = charIDToTypeID( "Dcmn" );
+                ref4.putClass( idDcmn );
+            desc19.putReference( idnull, ref4 );
+            var idNm = charIDToTypeID( "Nm  " );
+            desc19.putString( idNm, giveFileName.text );
+            var idUsng = charIDToTypeID( "Usng" );
+                var ref5 = new ActionReference();
+                var idLyr = charIDToTypeID( "Lyr " );
+                var idOrdn = charIDToTypeID( "Ordn" );
+                var idTrgt = charIDToTypeID( "Trgt" );
+                ref5.putEnumerated( idLyr, idOrdn, idTrgt );
+            desc19.putReference( idUsng, ref5 );
+            var idVrsn = charIDToTypeID( "Vrsn" );
+            desc19.putInteger( idVrsn, 5 );
+        executeAction( idMk, desc19, DialogModes.NO );
+    };
+
+    function saveImg() {
+        activeDocument.mergeVisibleLayers();
+
+        if (checkTontrennung.value === true) {
+            var idPstr = charIDToTypeID("Pstr");
+            var desc28 = new ActionDescriptor();
+            var idLvls = charIDToTypeID("Lvls");
+            desc28.putInteger(idLvls, value.text);
+            executeAction(idPstr, desc28, DialogModes.NO);
+        }
+
+        if (checkCrop.value === true) {
+        activeDocument.trim(TrimType.TRANSPARENT,true,true,true,true);  
+        }
+
+        if (radioPNG.value === true) {
+            if (checkMobilScale.value == true) {
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + quadSize+ ".png");
+                SavePNG(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + doubleSize+ ".png");
+                SavePNG(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".png");
+                SavePNG(saveFile);
+                }
+            else {
+            saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".png");
+            SavePNG(saveFile);
+            }
+        } else if (radioJPG.value === true) {
+            if (checkMobilScale.value == true) {
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + quadSize+ ".jpg");
+                SaveJPG(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + doubleSize+ ".jpg");
+                SaveJPG(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".jpg");
+                SaveJPG(saveFile);
+                }
+            saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".jpg");
+            SaveJPG(saveFile);
+        } else {
+            if (checkMobilScale.value == true) {
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + quadSize+ ".png");
+                SavePNG8(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + doubleSize+ ".png");
+                SavePNG8(saveFile);
+
+                resize50();
+
+                saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".png");
+                SavePNG8(saveFile);
+                }
+            else {
+            saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".png");
+            SavePNG8(saveFile);
+            }
+        }
+
+        app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+
+        function SavePNG(saveFile) {
+            var pngOpts = new ExportOptionsSaveForWeb;
+            pngOpts.format = SaveDocumentType.PNG
+            pngOpts.PNG8 = false;
+            pngOpts.transparency = true;
+            pngOpts.interlaced = true;
+            //pngOpts.lossy = 0;
+            pngOpts.quality = 100;
+            pngOpts.colorReduction = ColorReductionType.SELECTIVE;
+            //activeDocument.exportDocument(new File(saveFile),ExportType.SAVEFORWEB,pngOpts);   
+            activeDocument.exportDocument(new File(saveFile), ExportType.SAVEFORWEB, pngOpts);
+        }
+
+        function SaveJPG(saveFile) {
+            var jpgOpts = new ExportOptionsSaveForWeb;
+            jpgOpts.format = SaveDocumentType.JPEG
+            jpgOpts.includeProfile = false;   
+            jpgOpts.optimized = true;
+            jpgOpts.interlaced = 0;
+            //pngOpts.lossy = 0;
+            jpgOpts.quality = valueQ.text;  
+            activeDocument.exportDocument(new File(saveFile), ExportType.SAVEFORWEB, jpgOpts);
+        }
+        
+        function SavePNG8(saveFile) {
+           
+            // =======================================================
+            var idsave = charIDToTypeID( "save" );
+                var desc1773 = new ActionDescriptor();
+                var idAs = charIDToTypeID( "As  " );
+                    var desc1774 = new ActionDescriptor();
+                    var idpngC = charIDToTypeID( "pngC" );
+                    desc1774.putInteger( idpngC, 9 );
+                    var idpngF = charIDToTypeID( "pngF" );
+                    desc1774.putInteger( idpngF, 248 );
+                    var idpngS = charIDToTypeID( "pngS" );
+                    desc1774.putInteger( idpngS, 0 );
+                    var idpngQ = charIDToTypeID( "pngQ" );
+                    desc1774.putBoolean( idpngQ, true );
+                    var idpngq = charIDToTypeID( "pngq" );
+                    desc1774.putInteger( idpngq, 60 );
+                    var idpngA = charIDToTypeID( "pngA" );
+                    var idalfT = charIDToTypeID( "alfT" );
+                    var idalfT = charIDToTypeID( "alfT" );
+                    desc1774.putEnumerated( idpngA, idalfT, idalfT );
+                    var idpngX = charIDToTypeID( "pngX" );
+                    desc1774.putBoolean( idpngX, false );
+                    var idpngI = charIDToTypeID( "pngI" );
+                    desc1774.putBoolean( idpngI, false );
+                    var idpngM = charIDToTypeID( "pngM" );
+                    desc1774.putBoolean( idpngM, false );
+                var idfnordSuperPNG = stringIDToTypeID( "fnord SuperPNG" );
+                desc1773.putObject( idAs, idfnordSuperPNG, desc1774 );
+                var idIn = charIDToTypeID( "In  " );
+                desc1773.putPath( idIn, new File( saveFile ) );
+                var idDocI = charIDToTypeID( "DocI" );
+                desc1773.putInteger( idDocI, 1264 );
+                var idCpy = charIDToTypeID( "Cpy " );
+                desc1773.putBoolean( idCpy, true );
+                var idsaveStage = stringIDToTypeID( "saveStage" );
+                var idsaveStageType = stringIDToTypeID( "saveStageType" );
+                var idsaveSucceeded = stringIDToTypeID( "saveSucceeded" );
+                desc1773.putEnumerated( idsaveStage, idsaveStageType, idsaveSucceeded );
+            executeAction( idsave, desc1773, DialogModes.NO );
+
+        }
+    }
+
+    function resize50() {
+        app.preferences.rulerUnits = Units.PERCENT;
+        activeDocument.resizeImage(50, undefined, undefined, ResampleMethod.BICUBICSHARPER);
+    }
+
+    
+};
+
+
 
 
 var base = 'DE';
@@ -371,7 +752,7 @@ function explain() {
     tut.add("StaticText", undefined, "Export klicken, im Popup gewünschten Namen einfügen.");
     tut.add("StaticText", undefined, "Länderkennung fügt sich automatisch hinzu. zB: -DE");
     tut.add("StaticText", undefined, "Für einen Erfolgreichen Export, bitte drauf achten, dass keine Ebene folgende Benennung hat:");
-    tut.add("StaticText", undefined, "HG, DE, EN, ES, FR, IT, NL, PL, RU, TR");
+    tut.add("StaticText", undefined, "HG, DE, EN, ES, FR, IT, NL, PL, RU, TR, CZ");
     tut.add("StaticText", undefined, "Diese sind exklusiv für die Export Layergroups vorbehalten - und somit Tabu!");
     var convert_button = tut.add("button", undefined, "Okay");
     convert_button.onClick = function () {
@@ -385,1040 +766,8 @@ function explain() {
     tut.show();
 }
 
-function doSomething(placeHolder, saveName) {
-    var oldPath = activeDocument.path;
-    var w = new Window("dialog", "Loka Export");
-    w.alignChildren = "center";
-    var title = w.add('statictext {text:"Run Export Script", characters: 20, justify: "left"}');
-    title.graphics.font = "dialog:14";
-    
-    var settingName = w.add("group");
-    settingName.add("StaticText", undefined, "&Enter Name:");
-    var newName = settingName.add("edittext", undefined, "background");
-        newName.shortcutKey ="e";
-        newName.characters = 15;
-    var settingLabel = settingName.add("StaticText", undefined, "-xx.");
-        var radioPNG = settingName.add("radiobutton", undefined, "PNG");
-        var radioJPG = settingName.add("radiobutton", undefined, "JPG");
-            radioPNG.value = true;
-  
-    w.add ("panel", [0,25,360,23]);
-    //w.add("StaticText", undefined, "Nutze den Tontrennung Slider bei PNG und bei JPG den Quality Slider");
-    var settingTontrennung = w.add("group");
-    var checkTontrennung = settingTontrennung.add("checkbox", undefined, "Tontrennung");
-    var value = settingTontrennung.add('edittext{text: 50, characters: 3, justify:"center", active: true}');
-    var slider = settingTontrennung.add('slider{minvalue: 0, maxvalue: 255, value: 50}');
-    
-    checkTontrennung.value = true;
-    var check = checkTontrennung.value;
-    var setting = value.text;
-    slider.onChanging = function () {
-        value.text = slider.value
-    }
-    value.onChanging = function () {
-        slider.value = Number(value.text)
-    }
-   
-    var settingQuality = w.add('group{orientation:"row", justify:"left"}');
-    //var panel = settingQuality.add('panel', [0,0,100,100], 'Gray', {borderStyle:'gray'});//border
-    settingQuality.add('statictext {text:" JPG Only Quality", characters: 25, justify: "left"}');
-    var valueQ = settingQuality.add('edittext{text: 50, characters: 3, justify:"center", active: true}');
-    var sliderQ = settingQuality.add('slider{minvalue: 0, maxvalue: 200, value: 100}');
-    
-    //var checkQuality = settingQuality.add("checkbox", undefined, "Quality");
-     sliderQ.onChanging = function () {
-        valueQ.text = sliderQ.value/2;
-    }
-    valueQ.onChanging = function () {
-        sliderQ.value = Number(valueQ.text)*2;
-    }
-    w.add ("panel", [0,25,360,23]);
-    var miscGroup = w.add("group");
-    var checkCrop = miscGroup.add("checkbox", undefined, "Crop Image");
-    checkCrop.value = false;
-    var checkMobil = miscGroup.add("checkbox", undefined, "Mobil Postfix (_de)");
-    checkMobil.value = false;
-    w.add ("panel", [0,25,360,23]);
-    var buttonGroup = w.add("group");
-    var convert_button = buttonGroup.add("button", undefined, "Export");
-    var close_button = buttonGroup.add("button", undefined, "Cancel");
 
-    //var lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"]; //web
-    //var lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"]; //mobil
-    var lokaEnding;
-
-    convert_button.onClick = function () {
-        
-        if (checkMobil.value == true) {
-            lokaEnding = ["_de", "_en", "_es", "_fr", "_it", "_nl", "_pl", "_ru", "_tr"]; //mobil
-        }
-        else {
-            lokaEnding = ["-de", "-en", "-es", "-fr", "-it", "-nl", "-pl", "-ru", "-tr"]; //web
-        }
-        
-        newName = newName.text;
-        // Select Loka Folder
-        // =======================================================
-        function lokaDe() {
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc96 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref20 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref20.putName(idLyr, "DE");
-            desc96.putReference(idnull, ref20);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc96.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list18 = new ActionList();
-            list18.putInteger(5267);
-            desc96.putList(idLyrI, list18);
-            executeAction(idslct, desc96, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc97 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref21 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref21.putName(idLyr, "HG");
-            desc97.putReference(idnull, ref21);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc97.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc97.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list19 = new ActionList();
-            list19.putInteger(5624);
-            list19.putInteger(5267);
-            desc97.putList(idLyrI, list19);
-            executeAction(idslct, desc97, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc98 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc98.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc98.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc98.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc98, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc99 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc99.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc99.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc99.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc99, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc100 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref22 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref22.putClass(idDcmn);
-            desc100.putReference(idnull, ref22);
-            var idNm = charIDToTypeID("Nm  ");
-            desc100.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref23 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref23.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc100.putReference(idUsng, ref23);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc100.putInteger(idVrsn, 5);
-            executeAction(idMk, desc100, DialogModes.NO);
-
-
-
-
-
-            var postfix = lokaEnding[0];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaEn() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1221 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref595 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref595.putName(idLyr, "EN");
-            desc1221.putReference(idnull, ref595);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1221.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1221.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list385 = new ActionList();
-            list385.putInteger(5);
-            list385.putInteger(9);
-            desc1221.putList(idLyrI, list385);
-            executeAction(idslct, desc1221, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1222 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref596 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref596.putName(idLyr, "HG");
-            desc1222.putReference(idnull, ref596);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1222.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list386 = new ActionList();
-            list386.putInteger(5);
-            desc1222.putList(idLyrI, list386);
-            executeAction(idslct, desc1222, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1223 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref597 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref597.putName(idLyr, "EN");
-            desc1223.putReference(idnull, ref597);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1223.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1223.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list387 = new ActionList();
-            list387.putInteger(5);
-            list387.putInteger(9);
-            desc1223.putList(idLyrI, list387);
-            executeAction(idslct, desc1223, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1224 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1224.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1224.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1224.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1224, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1225 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1225.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1225.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1225.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1225, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1226 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref598 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref598.putClass(idDcmn);
-            desc1226.putReference(idnull, ref598);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1226.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref599 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref599.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1226.putReference(idUsng, ref599);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1226.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1226, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[1];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaEs() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1295 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref639 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref639.putName(idLyr, "ES");
-            desc1295.putReference(idnull, ref639);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1295.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list408 = new ActionList();
-            list408.putInteger(11);
-            desc1295.putList(idLyrI, list408);
-            executeAction(idslct, desc1295, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1296 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref640 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref640.putName(idLyr, "HG");
-            desc1296.putReference(idnull, ref640);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1296.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1296.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list409 = new ActionList();
-            list409.putInteger(5);
-            list409.putInteger(11);
-            desc1296.putList(idLyrI, list409);
-            executeAction(idslct, desc1296, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1297 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1297.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1297.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1297.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1297, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1298 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1298.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1298.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1298.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1298, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1299 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref641 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref641.putClass(idDcmn);
-            desc1299.putReference(idnull, ref641);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1299.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref642 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref642.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1299.putReference(idUsng, ref642);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1299.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1299, DialogModes.NO);
-
-
-            var postfix = lokaEnding[2];
-            main(postfix);
-        }
-        //=====================================================
-        function lokaFr() {
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1525 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref701 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref701.putName(idLyr, "HG");
-            desc1525.putReference(idnull, ref701);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1525.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list457 = new ActionList();
-            list457.putInteger(5);
-            desc1525.putList(idLyrI, list457);
-            executeAction(idslct, desc1525, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1526 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref702 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref702.putName(idLyr, "FR");
-            desc1526.putReference(idnull, ref702);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1526.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1526.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list458 = new ActionList();
-            list458.putInteger(5);
-            list458.putInteger(27);
-            desc1526.putList(idLyrI, list458);
-            executeAction(idslct, desc1526, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1527 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1527.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1527.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1527.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1527, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1528 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1528.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1528.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1528.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1528, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1529 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref703 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref703.putClass(idDcmn);
-            desc1529.putReference(idnull, ref703);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1529.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref704 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref704.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1529.putReference(idUsng, ref704);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1529.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1529, DialogModes.NO);
-
-            var postfix = lokaEnding[3];
-            main(postfix);
-
-        }
-        //=======================================================
-        function lokaIt() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1571 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref719 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref719.putName(idLyr, "HG");
-            desc1571.putReference(idnull, ref719);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1571.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list466 = new ActionList();
-            list466.putInteger(5);
-            desc1571.putList(idLyrI, list466);
-            executeAction(idslct, desc1571, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1572 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref720 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref720.putName(idLyr, "IT");
-            desc1572.putReference(idnull, ref720);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1572.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1572.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list467 = new ActionList();
-            list467.putInteger(5);
-            list467.putInteger(22);
-            desc1572.putList(idLyrI, list467);
-            executeAction(idslct, desc1572, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1573 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1573.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1573.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1573.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1573, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1574 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1574.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1574.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1574.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1574, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1575 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref721 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref721.putClass(idDcmn);
-            desc1575.putReference(idnull, ref721);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1575.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref722 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref722.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1575.putReference(idUsng, ref722);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1575.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1575, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[4];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaNl() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1639 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref746 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref746.putName(idLyr, "HG");
-            desc1639.putReference(idnull, ref746);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1639.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list484 = new ActionList();
-            list484.putInteger(5);
-            desc1639.putList(idLyrI, list484);
-            executeAction(idslct, desc1639, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1640 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref747 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref747.putName(idLyr, "NL");
-            desc1640.putReference(idnull, ref747);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1640.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1640.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list485 = new ActionList();
-            list485.putInteger(5);
-            list485.putInteger(22);
-            desc1640.putList(idLyrI, list485);
-            executeAction(idslct, desc1640, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1641 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1641.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1641.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1641.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1641, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1642 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1642.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1642.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1642.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1642, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1643 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref748 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref748.putClass(idDcmn);
-            desc1643.putReference(idnull, ref748);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1643.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref749 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref749.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1643.putReference(idUsng, ref749);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1643.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1643, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[5];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaPl() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1682 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref761 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref761.putName(idLyr, "PL");
-            desc1682.putReference(idnull, ref761);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1682.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list495 = new ActionList();
-            list495.putInteger(25);
-            desc1682.putList(idLyrI, list495);
-            executeAction(idslct, desc1682, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1683 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref762 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref762.putName(idLyr, "HG");
-            desc1683.putReference(idnull, ref762);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1683.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1683.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list496 = new ActionList();
-            list496.putInteger(5);
-            list496.putInteger(25);
-            desc1683.putList(idLyrI, list496);
-            executeAction(idslct, desc1683, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1684 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1684.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1684.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1684.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1684, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1685 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1685.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1685.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1685.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1685, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1686 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref763 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref763.putClass(idDcmn);
-            desc1686.putReference(idnull, ref763);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1686.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref764 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref764.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1686.putReference(idUsng, ref764);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1686.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1686, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[6];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaRu() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1722 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref773 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref773.putName(idLyr, "RU");
-            desc1722.putReference(idnull, ref773);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1722.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list505 = new ActionList();
-            list505.putInteger(28);
-            desc1722.putList(idLyrI, list505);
-            executeAction(idslct, desc1722, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1723 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref774 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref774.putName(idLyr, "HG");
-            desc1723.putReference(idnull, ref774);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1723.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1723.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list506 = new ActionList();
-            list506.putInteger(5);
-            list506.putInteger(28);
-            desc1723.putList(idLyrI, list506);
-            executeAction(idslct, desc1723, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1724 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1724.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1724.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1724.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1724, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1725 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1725.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1725.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1725.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1725, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1726 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref775 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref775.putClass(idDcmn);
-            desc1726.putReference(idnull, ref775);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1726.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref776 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref776.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1726.putReference(idUsng, ref776);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1726.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1726, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[7];
-            main(postfix);
-        }
-        //=======================================================
-        function lokaTr() {
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1763 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref787 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref787.putName(idLyr, "TR");
-            desc1763.putReference(idnull, ref787);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1763.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list514 = new ActionList();
-            list514.putInteger(31);
-            desc1763.putList(idLyrI, list514);
-            executeAction(idslct, desc1763, DialogModes.NO);
-
-            // =======================================================
-            var idslct = charIDToTypeID("slct");
-            var desc1764 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref788 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            ref788.putName(idLyr, "HG");
-            desc1764.putReference(idnull, ref788);
-            var idselectionModifier = stringIDToTypeID("selectionModifier");
-            var idselectionModifierType = stringIDToTypeID("selectionModifierType");
-            var idaddToSelection = stringIDToTypeID("addToSelection");
-            desc1764.putEnumerated(idselectionModifier, idselectionModifierType, idaddToSelection);
-            var idMkVs = charIDToTypeID("MkVs");
-            desc1764.putBoolean(idMkVs, false);
-            var idLyrI = charIDToTypeID("LyrI");
-            var list515 = new ActionList();
-            list515.putInteger(5);
-            list515.putInteger(31);
-            desc1764.putList(idLyrI, list515);
-            executeAction(idslct, desc1764, DialogModes.NO);
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1765 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1765.putInteger(idLvl, 1);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var identer = stringIDToTypeID("enter");
-            desc1765.putEnumerated(idStte, idStte, identer);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1765.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1765, DialogModes.NO );
-
-            // =======================================================
-            var idmodalStateChanged = stringIDToTypeID("modalStateChanged");
-            var desc1766 = new ActionDescriptor();
-            var idLvl = charIDToTypeID("Lvl ");
-            desc1766.putInteger(idLvl, 0);
-            var idStte = charIDToTypeID("Stte");
-            var idStte = charIDToTypeID("Stte");
-            var idexit = stringIDToTypeID("exit");
-            desc1766.putEnumerated(idStte, idStte, idexit);
-            var idkcanDispatchWhileModal = stringIDToTypeID("kcanDispatchWhileModal");
-            desc1766.putBoolean(idkcanDispatchWhileModal, true);
-            //executeAction( idmodalStateChanged, desc1766, DialogModes.NO );
-
-            // =======================================================
-            var idMk = charIDToTypeID("Mk  ");
-            var desc1767 = new ActionDescriptor();
-            var idnull = charIDToTypeID("null");
-            var ref789 = new ActionReference();
-            var idDcmn = charIDToTypeID("Dcmn");
-            ref789.putClass(idDcmn);
-            desc1767.putReference(idnull, ref789);
-            var idNm = charIDToTypeID("Nm  ");
-            desc1767.putString(idNm, newName);
-            var idUsng = charIDToTypeID("Usng");
-            var ref790 = new ActionReference();
-            var idLyr = charIDToTypeID("Lyr ");
-            var idOrdn = charIDToTypeID("Ordn");
-            var idTrgt = charIDToTypeID("Trgt");
-            ref790.putEnumerated(idLyr, idOrdn, idTrgt);
-            desc1767.putReference(idUsng, ref790);
-            var idVrsn = charIDToTypeID("Vrsn");
-            desc1767.putInteger(idVrsn, 5);
-            executeAction(idMk, desc1767, DialogModes.NO);
-
-
-
-            var postfix = lokaEnding[8];
-            main(postfix);
-        }
-        //=======================================================
-        //======================Save Thing==========================
-        //=======================================================
-
-
-        function main(postfix) {
-            activeDocument.mergeVisibleLayers();
-
-            if (checkTontrennung.value === true) {
-
-                var idPstr = charIDToTypeID("Pstr");
-                var desc28 = new ActionDescriptor();
-                var idLvls = charIDToTypeID("Lvls");
-                desc28.putInteger(idLvls, value.text);
-                executeAction(idPstr, desc28, DialogModes.NO);
-            }
-            
-            if (checkCrop.value === true) {
-            activeDocument.mergeVisibleLayers();  
-            activeDocument.trim(TrimType.TRANSPARENT,true,true,true,true);  
-            }
-            
-            if (radioPNG.value === true) {
-                var saveFile = File(oldPath + "/" + newName + postfix + ".png");
-                SavePNG(saveFile);
-            } else {
-                var saveFile = File(oldPath + "/" + newName + postfix + ".jpg");
-                SaveJPG(saveFile);
-            }
-
-            app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
-
-            function SavePNG(saveFile) {
-                var pngOpts = new ExportOptionsSaveForWeb;
-                pngOpts.format = SaveDocumentType.PNG
-                pngOpts.PNG8 = false;
-                pngOpts.transparency = true;
-                pngOpts.interlaced = true;
-                //pngOpts.lossy = 0;
-                pngOpts.quality = 100;
-                pngOpts.colorReduction = ColorReductionType.SELECTIVE;
-                //activeDocument.exportDocument(new File(saveFile),ExportType.SAVEFORWEB,pngOpts);   
-                activeDocument.exportDocument(new File(saveFile), ExportType.SAVEFORWEB, pngOpts);
-            }
-
-            function SaveJPG(saveFile) {
-                var jpgOpts = new ExportOptionsSaveForWeb;
-                jpgOpts.format = SaveDocumentType.JPEG
-                jpgOpts.includeProfile = false;   
-                jpgOpts.optimized = true;
-                jpgOpts.interlaced = 0;
-                //pngOpts.lossy = 0;
-                jpgOpts.quality = valueQ.text;  
-                activeDocument.exportDocument(new File(saveFile), ExportType.SAVEFORWEB, jpgOpts);
-            }
-        }
-        //========================================================
-
-        //copyHG();
-        lokaDe();
-        lokaEn();
-        lokaEs();
-        lokaFr();
-        lokaIt();
-        lokaNl();
-        lokaPl();
-        lokaRu();
-        lokaTr();
-        w.close();
-    }
-
-
-    w.show();
-    // =======================================================
-    /*function copyHG() {
-    	var idslct = charIDToTypeID("slct");
-    	var desc804 = new ActionDescriptor();
-    	var idnull = charIDToTypeID("null");
-    	var ref397 = new ActionReference();
-    	var idLyr = charIDToTypeID("Lyr ");
-    	ref397.putName(idLyr, "HG");
-    	desc804.putReference(idnull, ref397);
-    	var idMkVs = charIDToTypeID("MkVs");
-    	desc804.putBoolean(idMkVs, false);
-    	var idLyrI = charIDToTypeID("LyrI");
-    	var list254 = new ActionList();
-    	list254.putInteger(5);
-    	desc804.putList(idLyrI, list254);
-    	executeAction(idslct, desc804, DialogModes.NO);
-
-    	// =======================================================
-    	var idMk = charIDToTypeID("Mk  ");
-    	var desc769 = new ActionDescriptor();
-    	var idnull = charIDToTypeID("null");
-    	var ref381 = new ActionReference();
-    	var idDcmn = charIDToTypeID("Dcmn");
-    	ref381.putClass(idDcmn);
-    	desc769.putReference(idnull, ref381);
-    	var idNm = charIDToTypeID("Nm  ");
-    	desc769.putString(charIDToTypeID('Nm  '), newName);
-    	var idUsng = charIDToTypeID("Usng");
-    	var ref382 = new ActionReference();
-    	var idLyr = charIDToTypeID("Lyr ");
-    	var idOrdn = charIDToTypeID("Ordn");
-    	var idTrgt = charIDToTypeID("Trgt");
-    	ref382.putEnumerated(idLyr, idOrdn, idTrgt);
-    	desc769.putReference(idUsng, ref382);
-    	var idVrsn = charIDToTypeID("Vrsn");
-    	desc769.putInteger(idVrsn, 5);
-    	executeAction(idMk, desc769, DialogModes.NO);
-    }*/
-
-}
-
+//=== ACHTUNG
 function convertCaps() {
     // =======================================================
 //Hintergrund
@@ -1847,3 +1196,54 @@ function correctFolderName(){
       };
     }
 }
+
+// ===============================================================================
+// ==========================Duplicate Folder for Loka============================
+// ===============================================================================
+function dplcFolder(lngs) {
+        // =======================================================
+        var idslct = charIDToTypeID("slct");
+        var desc1718 = new ActionDescriptor();
+        var idnull = charIDToTypeID("null");
+        var ref365 = new ActionReference();
+        var idLyr = charIDToTypeID("Lyr ");
+        ref365.putName(idLyr, "DE");
+        desc1718.putReference(idnull, ref365);
+        var idMkVs = charIDToTypeID("MkVs");
+        desc1718.putBoolean(idMkVs, false);
+        var idLyrI = charIDToTypeID("LyrI");
+        var list432 = new ActionList();
+        list432.putInteger(2);
+        desc1718.putList(idLyrI, list432);
+        executeAction(idslct, desc1718, DialogModes.NO);
+        // =======================================================
+        var idDplc = charIDToTypeID("Dplc");
+        var desc1722 = new ActionDescriptor();
+        var idnull = charIDToTypeID("null");
+        var ref366 = new ActionReference();
+        var idLyr = charIDToTypeID("Lyr ");
+        var idOrdn = charIDToTypeID("Ordn");
+        var idTrgt = charIDToTypeID("Trgt");
+        ref366.putEnumerated(idLyr, idOrdn, idTrgt);
+        desc1722.putReference(idnull, ref366);
+        var idNm = charIDToTypeID("Nm  ");
+        desc1722.putString(idNm, lngs); //FolderName
+        var idVrsn = charIDToTypeID("Vrsn");
+        desc1722.putInteger(idVrsn, 5);
+        var idIdnt = charIDToTypeID("Idnt");
+        var list433 = new ActionList();
+        list433.putInteger(5);
+        list433.putInteger(6);
+        list433.putInteger(7);
+        desc1722.putList(idIdnt, list433);
+        executeAction(idDplc, desc1722, DialogModes.NO);
+    };
+
+function dplcFolderForLoka() {
+ 
+    var lngs = ["EN", "ES", "FR", "IT", "NL", "PL", "RU", "TR", "CZ"];
+    for (i = 0; i < lngs.length; i++) {
+        dplcFolder(lngs[i]);
+    };
+};
+
