@@ -61,13 +61,25 @@ function runScript(){
         dialogMain.add("panel", [0,25,530,23]);
     
         var saveLocationInfo = dialogMain.add("group");
-        
-        var btnSelectFolder = saveLocationInfo.add("button", undefined, "Select");
+
+        var btnSelectFolder = saveLocationInfo.add("button", undefined, "Select Folder");
         btnSelectFolder.graphics.font = "dialog: 9";
         btnSelectFolder.onClick = function () {
-            savepath = Folder.selectDialog("Select Folder", undefined, true);
-            alert(savePath);
+            var f = Folder.selectDialog("Select Folder", undefined, true);
+            savePath = f;
+            //alert(savePath);
+            saveLocaText.text = savePath;
+            this.window.layout.layout(true);
         } 
+        
+        var btnResetSave = saveLocationInfo.add("button", undefined, "Reset");
+            btnResetSave.onClick = function() {
+            var f = activeDocument.path;
+            savePath = f;
+            //alert(savePath);
+            saveLocaText.text = savePath;
+            this.window.layout.layout(true);
+        }
     
         var btnFolder = saveLocationInfo.add("button", undefined,"Open");
         btnFolder.graphics.font = "dialog: 9";
@@ -76,6 +88,8 @@ function runScript(){
         }
         var saveLocaText = saveLocationInfo.add("StaticText", undefined, savePath);
         saveLocaText.graphics.font = "dialog: 9";
+    
+
     
         dialogMain.add("panel", [0,25,530,23]);
 
@@ -155,6 +169,8 @@ function runScript(){
     } catch (e2) {  
         dynExportName.text = "predefined value";  
     }   
+    
+    
 
     dialogMain.show();
 
