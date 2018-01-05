@@ -5,6 +5,7 @@
 #target Photoshop
 #target estoolkit
 var savePath = activeDocument.path;
+var savedPath;
 var savePostfix;
 var dynFolderName;
 var giveFileName;
@@ -53,9 +54,14 @@ function runScript(){
         dynFolderName.shortcutKey = "l"; //wie L
         var exportPostfix = dialogMain.add("group");
         exportPostfix.add("StaticText", undefined, "Export Loca Post&fix         ");
-        var dynExportName = exportPostfix.add("EditText", undefined, "-cS,-de,-en,-es,-fr,-it,-nl,-pl,-ru,-tr");
+        var dynExportName = exportPostfix.add("EditText", undefined, "-cs,-de,-en,-es,-fr,-it,-nl,-pl,-ru,-tr");
+    
+        var radioFilename = exportPostfix.add("radiobutton", undefined, "Create File"); //use postfix on file
+        var radioFoldername = exportPostfix.add("radiobutton", undefined, "No Postfix, but Folder"); //use ps foldernames and create same named file in different folder.
+        radioFilename.value = true;
+    
         dynExportName.shortcutKey = "f"; 
-         var describ = dialogMain.add('StaticText {text:"                                             List Folder Name and Postfix without Comma", characters: 20, justify: "center"}');
+         var describ = dialogMain.add('StaticText {text:"                                             List Folder Name and Postfix without Space", characters: 20, justify: "center"}');
         describ.graphics.font = "dialog: 9";
     
         dialogMain.add("panel", [0,25,530,23]);
@@ -67,6 +73,7 @@ function runScript(){
         btnSelectFolder.onClick = function () {
             var f = Folder.selectDialog("Select Folder", undefined, true);
             savePath = f;
+            savedPath = f;
             //alert(savePath);
             saveLocaText.text = savePath;
             this.window.layout.layout(true);
@@ -76,6 +83,7 @@ function runScript(){
             btnResetSave.onClick = function() {
             var f = activeDocument.path;
             savePath = f;
+            savedPath = f;
             //alert(savePath);
             saveLocaText.text = savePath;
             this.window.layout.layout(true);
@@ -246,6 +254,11 @@ function runScript(){
         executeAction( idMk, desc19, DialogModes.NO );
     };
 
+    function saveImgFolder() {
+        var folder1 = Folder("~/desktop/My New Folder");
+        //Check if it exist, if not create it.
+        if(!folder1.exists) folder1.create();
+    }
     function saveImg() {
         activeDocument.mergeVisibleLayers();
 
@@ -259,6 +272,15 @@ function runScript(){
 
         if (checkCrop.value === true) {
         activeDocument.trim(TrimType.TRANSPARENT,true,true,true,true);  
+        }
+        
+         if (radioFoldername.value == true) {
+            savePath = savedPath;
+            var locaFolder = Folder(savePath + "/" + dynFolderName[i]);
+            // alert(locaFolder);
+            if(!locaFolder.exists)locaFolder.create();
+            savePath = locaFolder;
+            savePostfix[i] = "";            
         }
 
         if (radioPNG.value === true) {
@@ -316,9 +338,10 @@ function runScript(){
             saveFile = File(savePath + "/" + nameDropdown.selection.text + giveFileName.text + savePostfix[i] + ".png");
             SavePNG8(saveFile);
             }
+        
         }
+          app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 
-        app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 
         function SavePNG(saveFile) {
             var pngOpts = new ExportOptionsSaveForWeb;
