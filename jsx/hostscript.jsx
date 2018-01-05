@@ -254,11 +254,7 @@ function runScript(){
         executeAction( idMk, desc19, DialogModes.NO );
     };
 
-    function saveImgFolder() {
-        var folder1 = Folder("~/desktop/My New Folder");
-        //Check if it exist, if not create it.
-        if(!folder1.exists) folder1.create();
-    }
+
     function saveImg() {
         activeDocument.mergeVisibleLayers();
 
@@ -276,7 +272,7 @@ function runScript(){
         
          if (radioFoldername.value == true) {
             savePath = savedPath;
-            var locaFolder = Folder(savePath + "/" + dynFolderName[i]);
+            var locaFolder = Folder(savePath + "/" + nameDropdown.selection.text + giveFileName.text + "/" + dynFolderName[i]);
             // alert(locaFolder);
             if(!locaFolder.exists)locaFolder.create();
             savePath = locaFolder;
